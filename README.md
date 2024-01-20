@@ -12,7 +12,7 @@
    ```sh
    ansible-galaxy install -p dependent-roles -r requirements.yml
    ```
-3. Prepare hosts (e.g. setup ssh access with key)
+3. Prepare hosts (e.g. setup ssh access with key) and upload your public key in your github repo
 4. Adjust variables
    - `group_vars/all`
    - `ansible.cfg`

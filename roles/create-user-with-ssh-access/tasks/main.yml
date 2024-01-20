@@ -9,9 +9,9 @@
     state: present
   become: true
 
-- name: Ensure SSH authorized key is installed for user "{{ new_username }}"
+- name: Set authorized keys for "{{ new_username }}"
   authorized_key:
     user: "{{ new_username }}"
     state: present
-    key: "{{ lookup('file', lookup('env','HOME') + '/.ssh/id_rsa.pub') }}"
+    key: "https://github.com/{{ new_username }}.keys"
   become: true
