@@ -1,0 +1,6 @@
+---
+- name: sudo without password
+  copy:
+    dest: "/etc/sudoers.d/{{ new_username }}"
+    content: "{{ new_username }} ALL=(ALL) NOPASSWD:ALL"
+  become: true

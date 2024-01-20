@@ -1,0 +1,19 @@
+- hosts: new
+  roles:
+    - role: install-packages
+      packages: [git, curl, htop, zsh, tmux]
+      become: true
+    - role: create-user-with-ssh-access
+    - role: configure-oh-my-zsh
+    - role: configure-oh-my-tmux
+    - role: configure-sudo-without-password
+    - role: install-docker-ce-with-compose
+      become: true
+      docker_edition: 'ce'
+      docker_package_state: present
+      docker_install_compose: true
+    - role: configure-docker
+    - role: secure-ssh-config
+
+  handlers:
+      - import_tasks: handlers/main.yml

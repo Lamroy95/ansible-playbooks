@@ -1,0 +1,4 @@
+- hosts: vpn
+  roles:
+    - role: enable-tcp-bbr-when-linux-kernel-support-it
+    - role: install-outline
