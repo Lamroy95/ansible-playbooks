@@ -1,3 +1,4 @@
 ---
 ansible_user: root
-new_username: lamroy95
+username: lamroy95
+github_username: lamroy95

@@ -1,7 +1,7 @@
 ---
-- name: Ensure user "{{ new_username }}" is created with superuser privileges
+- name: Ensure user "{{ username }}" is created with superuser privileges
   user:
-    name: "{{ new_username }}"
+    name: "{{ username }}"
     groups: sudo
     append: yes
     create_home: yes
@@ -9,9 +9,9 @@
     state: present
   become: true
 
-- name: Set authorized keys for "{{ new_username }}"
+- name: Set authorized keys for "{{ username }}"
   authorized_key:
-    user: "{{ new_username }}"
+    user: "{{ username }}"
     state: present
-    key: "https://github.com/{{ new_username }}.keys"
+    key: "https://github.com/{{ github_username }}.keys"
   become: true

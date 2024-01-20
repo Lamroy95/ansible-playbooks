@@ -1,32 +1,38 @@
 ---
 - name: Skip setting up Oh My Tmux if ".tmux.conf.local" already exists
   stat:
-    path: "/home/{{ new_username }}/.tmux.conf.local"
+    path: "/home/{{ username }}/.tmux.conf.local"
   become: true
-  become_user: "{{ new_username }}"
+  become_user: "{{ username }}"
   register: tmux_config_file
+
+- name: Install tmux
+  package: name=tmux state=present update_cache=true
+  become: true
+  when: tmux_config_file.stat.exists == False 
 
 - name: Clone Oh My Tmux repo
   git:
     repo: https://github.com/gpakosz/.tmux.git
-    dest: "/home/{{ new_username }}/.tmux"
+    dest: "/home/{{ username }}/.tmux"
   become: true
-  become_user: "{{ new_username }}"
+  become_user: "{{ username }}"
   when: tmux_config_file.stat.exists == False 
 
 - name: Link tmux config
   file:
-    src: "/home/{{ new_username }}/.tmux/.tmux.conf"
-    dest: "/home/{{ new_username }}/.tmux.conf"
+    src: "/home/{{ username }}/.tmux/.tmux.conf"
+    dest: "/home/{{ username }}/.tmux.conf"
     state: link
   become: true
-  become_user: "{{ new_username }}"
+  become_user: "{{ username }}"
   when: tmux_config_file.stat.exists == False 
 
 - name: Copy local tmux config
   copy:
-    src: "/home/{{ new_username }}/.tmux/.tmux.conf.local"
-    dest: "/home/{{ new_username }}/.tmux.conf.local"
+    src: "/home/{{ username }}/.tmux/.tmux.conf.local"
+    remote_src: true
+    dest: "/home/{{ username }}/.tmux.conf.local"
   become: true
-  become_user: "{{ new_username }}"
+  become_user: "{{ username }}"
   when: tmux_config_file.stat.exists == False
