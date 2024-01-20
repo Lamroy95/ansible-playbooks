@@ -1,0 +1,8 @@
+---
+- name: Open ports
+  become: true
+  ufw:
+    rule: allow
+    port: "{{ item }}"
+  with_items: "{{ ports }}"
+  notify: Reload ufw

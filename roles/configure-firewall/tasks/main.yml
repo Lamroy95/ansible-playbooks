@@ -1,0 +1,23 @@
+---
+- name: Enable logging
+  ufw:
+    logging: on
+
+- name: Allow ssh
+  ufw: 
+    rule: allow
+    port: 22
+
+- name: Allow all outgoing traffic
+  ufw: 
+    default: allow
+    direction: outgoing
+
+- name: Deny all incoming traffic
+  ufw: 
+    default: deny
+    direction: incoming
+
+- name: Enable uwf
+  ufw: 
+    state: enabled

@@ -1,10 +1,11 @@
 - hosts: new
   roles:
     - role: install-packages
-      packages: [git, curl, htop]
-      become: true
+      packages: [git, curl, htop, ufw]
     - role: create-user-with-ssh-access
     - role: configure-sudo-without-password
+    - role: configure-firewall
+      become: true
     - role: configure-oh-my-zsh
     - role: configure-oh-my-tmux
     - role: install-docker-ce-with-compose
@@ -16,4 +17,4 @@
     - role: secure-ssh-config
 
   handlers:
-      - import_tasks: handlers/main.yml
+    - import_tasks: handlers/ssh.yml

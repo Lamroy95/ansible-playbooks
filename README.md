@@ -4,8 +4,9 @@
    - Role `create-user-with-ssh-access` gets keys from Github repo. Upload your public key there and set `github_username` in `group_vars/all`
 
 - ## Install VPNs and proxies:
-   - Playbook: `vpn.yml`  
-   - Check `outline-server-<ip>-info.log` files for manager credentials after playbook execution
+   - Playbook: `vpn.yml`
+   - Use host alias to set outline server name (e.g. in `hosts` file: `SOME_VPN ansible_host=1.2.3.4 ansible_ssh_private_key_file=...`)
+   - Check `logs/outline/server-<host_alias>-access.log` files for manager credentials after playbook execution
 
 # How to use:
 1. Install ansible

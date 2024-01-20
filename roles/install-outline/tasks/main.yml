@@ -1,20 +1,54 @@
 ---
+- name: Skip installation if access.txt already exists
+  stat:
+    path: "/opt/outline/access.txt"
+  become: true
+  register: outline_access_file
+
+- name: Parse credentials from access.txt if it exists
+  ansible.builtin.script: scripts/parse_outline_access_file.py
+  register: access_credentials
+  args:
+    executable: python3
+  become: true
+  when: outline_access_file.stat.exists == True
+
+- name: Set parsed credentials
+  set_fact:
+    outline_info: "{{ access_credentials.stdout }}"
+  when: outline_access_file.stat.exists == True
+
 - name: Download Outline install script
   get_url:
     url: "{{ outline_install_script_url }}"
     dest: /tmp/outline-installer.sh
     mode: 0755
+  when: outline_access_file.stat.exists == False
+
 - name: Run Outline install script
-  command: /bin/bash /tmp/outline-installer.sh
+  command: /bin/bash /tmp/outline-installer.sh --api-port={{ outline_api_port }} --keys-port={{ outline_keys_port }}
   register: outline_install_result
   become: true
-- name: Parse API Url and Credentials from installation output
+  when: outline_access_file.stat.exists == False
+  environment:
+    SB_DEFAULT_SERVER_NAME: "{{ inventory_hostname }}"
+
+- name: Parse credentials from installation output
   set_fact:
     outline_info: "{{ outline_install_result.stdout | regex_search('\\{[\\s\\S]*\\}') }}"
-- name: Save outline server info to local computer
+  when: outline_access_file.stat.exists == False
+
+- name: Create outline logs dir on local machine
+  include_role:
+    name: create-local-dir
+  vars:
+    directory: logs/outline
+
+- name: Save outline access log to local computer
   local_action:
     module: copy
     content: "{{ outline_info }}"
-    dest: "outline-server-{{ current_host }}-info.log"
+    dest: "logs/outline/server-{{ inventory_hostname }}-access.log"
+
 - debug:
-    msg: "Outline server installation complete! Please copy the generated info stored in \"outline-server-{{ current_host }}-info.log\" and paste it in your outline manager app"
+    msg: "Outline access logs are here: `logs/outline/server-{{ inventory_hostname }}-access.log`"

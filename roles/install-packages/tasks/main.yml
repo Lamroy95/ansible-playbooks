@@ -1,5 +1,8 @@
 ---
 - name: Ensure {{ packages }} is/are installed
-  package: name={{ item }} state=present update_cache=true
+  package:
+    name: "{{ item }}"
+    state: present
+    update_cache: true
   become: true
   with_items: "{{ packages }}"

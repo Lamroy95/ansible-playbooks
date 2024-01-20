@@ -1,0 +1,6 @@
+---
+- name: Create directory {{ directory }} on local machine
+  local_action:
+    module: file
+    path: "{{ directory }}"
+    state: directory

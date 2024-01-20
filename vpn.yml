@@ -1,4 +1,7 @@
 - hosts: vpn
   roles:
     - role: enable-tcp-bbr-when-linux-kernel-support-it
+      become: true
     - role: install-outline
+    - role: firewall-open-ports
+      ports: "[{{ outline_api_port }}, {{outline_keys_port}}]"
