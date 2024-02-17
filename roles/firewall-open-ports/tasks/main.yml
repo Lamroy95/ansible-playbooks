@@ -4,5 +4,6 @@
   ufw:
     rule: allow
     port: "{{ item }}"
+    comment: "{{ comment }}"
   with_items: "{{ ports }}"
   notify: Reload ufw

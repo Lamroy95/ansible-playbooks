@@ -1,0 +1,12 @@
+- hosts: all
+  roles:
+    - name: Set authorized keys for "{{ username }}"
+      authorized_key:
+        user: "{{ username }}"
+        state: present
+        key: "https://github.com/{{ github_username }}.keys"
+      become: true
+      notify: restart sshd
+
+  handlers:
+    - import_tasks: handlers/ssh.yml

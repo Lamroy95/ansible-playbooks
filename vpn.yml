@@ -5,3 +5,4 @@
     - role: install-outline
     - role: firewall-open-ports
       ports: "[{{ outline_api_port }}, {{outline_keys_port}}]"
+      comment: "Open ports for Outline VPN"

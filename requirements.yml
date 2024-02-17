@@ -1,3 +1,5 @@
 ---
 - src:  geerlingguy.docker
   name: install-docker-ce-with-compose
+- src: nginxinc.nginx
+  name: ansible-role-nginx

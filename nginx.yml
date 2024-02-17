@@ -1,0 +1,7 @@
+- hosts: nginx
+  roles:
+    - role: ansible-role-nginx
+      state: present
+    - role: firewall-open-ports
+      ports: "{{ required_ports }}"
+      comment: "Open http and https ports"

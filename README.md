@@ -10,9 +10,9 @@
 
 # How to use:
 1. Install ansible
-2. Install roles dependencies:
+2. Install roles dependencies, if required (see playbooks description above):
    ```sh
-   ansible-galaxy install -p dependent-roles -r requirements.yml
+   ansible-galaxy install -r requirements.yml
    ```
 3. Prepare hosts (e.g. setup ssh access with key or get username-pwd credentials) and upload your public key in your github repo
 4. Adjust variables
