@@ -17,4 +17,4 @@
     - role: secure-ssh-config
 
   handlers:
-    - import_tasks: handlers/ssh.yml
+    - import_tasks: ../handlers/ssh.yml

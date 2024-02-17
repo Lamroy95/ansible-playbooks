@@ -19,9 +19,13 @@
    - `group_vars/*`
    - `ansible.cfg`
    - Create file `hosts` with required host groups (you can specify credentials per host here)
-5. Run playbook
+5. Run check:
    ```sh
-   ansible-playbook basic_server_setup.yml
+    ansible-playbook playbooks/playbook-name.yml --check --diff
+    ```
+6. Run playbook
+   ```sh
+   ansible-playbook playbooks/playbook-name.yml
    ```
 
 ## FAQ:

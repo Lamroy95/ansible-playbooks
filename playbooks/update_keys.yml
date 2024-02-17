@@ -1,5 +1,5 @@
 - hosts: all
-  roles:
+  tasks:
     - name: Set authorized keys for "{{ username }}"
       authorized_key:
         user: "{{ username }}"
@@ -9,4 +9,4 @@
       notify: restart sshd
 
   handlers:
-    - import_tasks: handlers/ssh.yml
+    - import_tasks: ../handlers/ssh.yml
