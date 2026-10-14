@@ -1,0 +1,21 @@
+{
+  "workspace": {
+    "id": null,
+    "name": "Untitled Workspace",
+    "theme": null,
+    "logo_url": null,
+    "brand_name": null,
+    "main_color": null,
+    "font_color": null,
+    "font_family": null,
+    "sidebar": []
+  },
+  "visualization": [],
+  "jobs": [],
+  "hooks": [],
+  "forms": [],
+  "scripts": [],
+  "iterators": [],
+  "conditions": [],
+  "version": "4.0"
+}

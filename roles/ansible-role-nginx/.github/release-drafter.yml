@@ -1,0 +1,133 @@
+---
+name-template: "$RESOLVED_VERSION"
+tag-template: "$RESOLVED_VERSION"
+include-pre-releases: true
+categories:
+  - title: 💣 Breaking Changes
+    labels:
+      - breaking change
+  - title: 🔔 Deprecation Warnings
+    labels:
+      - deprecation
+  - title: 🚀 Features
+    labels:
+      - enhancement
+  - title: 🐛 Bug Fixes
+    labels:
+      - bug
+  - title: 🧪 Tests
+    labels:
+      - tests
+  - title: 🔨 Maintenance
+    labels:
+      - chore
+  - title: 👷 CI/CD
+    labels:
+      - ci
+  - title: ⬆️ Dependencies
+    collapse-after: 15
+    labels:
+      - dependencies
+  - title: 📝 Documentation
+    labels:
+      - documentation
+  - title: Other Changes
+    labels:
+      - "*"
+exclude-labels:
+  - skip changelog
+version-resolver:
+  minor:
+    labels:
+      - breaking change
+      - deprecation
+  patch:
+    labels:
+      - bug
+      - ci
+      - chore
+      - dependencies
+      - documentation
+      - enhancement
+      - tests
+  default: patch
+autolabeler:
+  - label: breaking change
+    body:
+      - "/breaking/i"
+    title:
+      - "/breaking/i"
+      - "/^\\w+!/i"
+  - label: deprecation
+    branch:
+      - "/deprecate\/.+/"
+    title:
+      - "/deprecate/i"
+  - label: enhancement
+    branch:
+      - "/feat\/.+/"
+      - "/feature\/.+/"
+    title:
+      - "/feat/i"
+      - "/feature/i"
+  - label: bug
+    branch:
+      - "/fix\/.+/"
+      - "/bug\/.+/"
+      - "/bugfix\/.+/"
+    title:
+      - "/fix/i"
+      - "/bug/i"
+      - "/bugfix/i"
+  - label: tests
+    branch:
+      - "/tests{0,1}\/.+/"
+    files:
+      - "/tests/**"
+    title:
+      - "/tests{0,1}\/.+/i"
+  - label: documentation
+    branch:
+      - "/docs{0,1}\/.+/"
+      - "/documentation\/.+/"
+    files:
+      - "docs/**"
+    title:
+      - "/docs{0,1}\/.+/i"
+      - "/documentation/i"
+  - label: ci
+    branch:
+      - "/ci\/.+/"
+    title:
+      - "/ci/i"
+  - label: chore
+    branch:
+      - "/chore\/.+/"
+      - "/refactor\/.+/"
+      - "/style\/.+/"
+    title:
+      - "/chore/i"
+      - "/refactor/i"
+      - "/style/i"
+replacers:
+  - search: "/(\\w+)(\\(\\w+\\))?!?: /g"
+    replace: ""
+template: |
+  👾 *Help make the NGINX Ansible role better by participating in our [survey](https://forms.office.com/Pages/ResponsePage.aspx?id=L_093Ttq0UCb4L-DJ9gcUKLQ7uTJaE1PitM_37KR881UM0NCWkY5UlE5MUYyWU1aTUcxV0NRUllJSC4u)!* 👾
+
+  ## What's new in NGINX's Ansible role $RESOLVED_VERSION!
+
+  $CHANGES
+
+  ## Install & Upgrade
+
+  - To install the Ansible NGINX role on a fresh environment, run `ansible-galaxy install nginxinc.nginx`.
+  - To upgrade the Ansible NGINX role to the latest release, run `ansible-galaxy install -f nginxinc.nginx`.
+  - To install or upgrade to this specific Ansible NGINX role release ($RESOLVED_VERSION), run `ansible-galaxy install -f nginxinc.nginx,v$RESOLVED_VERSION`.
+
+  ## Resources
+
+  - Functional configuration examples (check `converge.yml` under each `molecule` scenario) -- [github.com/nginxinc/ansible-role-nginx/tree/$RESOLVED_VERSION/molecule](https://github.com/nginxinc/ansible-role-nginx/tree/$RESOLVED_VERSION/molecule).
+  - Ansible Galaxy repository -- [galaxy.ansible.com/nginxinc/nginx](https://galaxy.ansible.com/nginxinc/nginx).
+  - NGINX Ansible role & collection introductory blog -- [f5.com/blog/announcing-nginx-core-collection-ansible](https://www.f5.com/blog/announcing-nginx-core-collection-ansible).
+  - NGINX: Better with Ansible demo -- [github.com/alessfg/nginx-ansible-demo](https://github.com/alessfg/nginx-ansible-demo).
