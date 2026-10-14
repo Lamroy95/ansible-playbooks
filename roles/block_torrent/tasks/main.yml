@@ -12,72 +12,107 @@
     state: present
   when: ansible_facts['os_family'] == "RedHat"
 
-- name: Block standard BitTorrent TCP port range (6881-6889)
+# ==============================================================================
+# 🧹 SAFE CLEANUP: Only remove old rules containing our specific comments
+# ==============================================================================
+
+- name: Scan existing FORWARD chain configuration
+  command: iptables -S FORWARD
+  register: forward_rules
+  changed_when: false
+
+- name: Delete old standard BitTorrent TCP port rule if it exists anywhere
+  command: iptables -D FORWARD -p tcp --dport 6881:6889 -j DROP
+  when: "'Block standard BitTorrent TCP ports' in forward_rules.stdout"
+  failed_when: false
+
+- name: Delete old standard BitTorrent UDP port rule if it exists anywhere
+  command: iptables -D FORWARD -p udp --dport 6881:6889 -j DROP
+  when: "'Block standard BitTorrent UDP ports' in forward_rules.stdout"
+  failed_when: false
+
+- name: Delete old DHT rule if it exists anywhere
+  command: iptables -D FORWARD -p udp -m string --string "d1:ad2:id20:" --algo kmp -j DROP
+  when: "'Drop BitTorrent DHT strings' in forward_rules.stdout"
+  failed_when: false
+
+- name: Delete old info_hash rule if it exists anywhere
+  command: iptables -D FORWARD -p udp -m string --string "info_hash" --algo kmp -j DROP
+  when: "'Drop BitTorrent info_hash queries' in forward_rules.stdout"
+  failed_when: false
+
+- name: Delete old TCP handshake rule if it exists anywhere
+  command: iptables -D FORWARD -p tcp -m string --string "BitTorrent" --algo kmp -j DROP
+  when: "'Drop BitTorrent TCP handshake signatures' in forward_rules.stdout"
+  failed_when: false
+
+- name: Delete old peer_id rule if it exists anywhere
+  command: iptables -D FORWARD -p tcp -m string --string "peer_id=" --algo kmp -j DROP
+  when: "'Drop BitTorrent peer_id' in forward_rules.stdout"
+  failed_when: false
+
+- name: Delete old connlimit rule if it exists anywhere
+  command: iptables -D FORWARD -p tcp --syn -m connlimit --connlimit-above {{ max_conn_per_ip }} -j DROP
+  when: "'Throttle massive P2P parallel connections' in forward_rules.stdout"
+  failed_when: false
+
+
+# ==============================================================================
+# 🚀 IDEMPOTENT TOP INSERTION (-I): Inject rules only if missing
+# ==============================================================================
+
+# Refresh the state check after removing any old configurations
+- name: Refresh FORWARD chain snapshot for placement validation
+  command: iptables -S FORWARD
+  register: fresh_forward_rules
+  changed_when: false
+
+- name: Insert standard BitTorrent TCP port range at top
   iptables:
     chain: FORWARD
+    rule_num: 1
+    action: insert
     protocol: tcp
     destination_port: "6881:6889"
     jump: DROP
     comment: "Block standard BitTorrent TCP ports"
+  when: "'Block standard BitTorrent TCP ports' not in fresh_forward_rules.stdout"
 
-- name: Block standard BitTorrent UDP port range (6881-6889)
+- name: Insert standard BitTorrent UDP port range at top
   iptables:
     chain: FORWARD
+    rule_num: 1
+    action: insert
     protocol: udp
     destination_port: "6881:6889"
     jump: DROP
     comment: "Block standard BitTorrent UDP ports"
+  when: "'Block standard BitTorrent UDP ports' not in fresh_forward_rules.stdout"
 
-- name: Drop DHT protocol strings (UDP handshake)
-  command: iptables -C FORWARD -p udp -m string --string "d1:ad2:id20:" --algo kmp -j DROP
-  register: dht_check
-  failed_when: false
-  changed_when: false
+- name: Insert Drop DHT rule at position 1
+  command: iptables -I FORWARD 1 -p udp -m string --string "d1:ad2:id20:" --algo kmp -m comment --comment "Drop BitTorrent DHT strings" -j DROP
+  when: "'Drop BitTorrent DHT strings' not in fresh_forward_rules.stdout"
 
-- name: Apply Drop DHT rule if absent
-  command: iptables -A FORWARD -p udp -m string --string "d1:ad2:id20:" --algo kmp -m comment --comment "Drop BitTorrent DHT strings" -j DROP
-  when: dht_check.rc != 0
+- name: Insert Drop info_hash rule at position 1
+  command: iptables -I FORWARD 1 -p udp -m string --string "info_hash" --algo kmp -m comment --comment "Drop BitTorrent info_hash queries" -j DROP
+  when: "'Drop BitTorrent info_hash queries' not in fresh_forward_rules.stdout"
 
-- name: Drop info_hash tracker queries
-  command: iptables -C FORWARD -p udp -m string --string "info_hash" --algo kmp -j DROP
-  register: info_hash_check
-  failed_when: false
-  changed_when: false
+- name: Insert Drop generic BitTorrent TCP rule at position 1
+  command: iptables -I FORWARD 1 -p tcp -m string --string "BitTorrent" --algo kmp -m comment --comment "Drop BitTorrent TCP handshake signatures" -j DROP
+  when: "'Drop BitTorrent TCP handshake signatures' not in fresh_forward_rules.stdout"
 
-- name: Apply Drop info_hash rule if absent
-  command: iptables -A FORWARD -p udp -m string --string "info_hash" --algo kmp -m comment --comment "Drop BitTorrent info_hash queries" -j DROP
-  when: info_hash_check.rc != 0
+- name: Insert Drop explicit peer ID rule at position 1
+  command: iptables -I FORWARD 1 -p tcp -m string --string "peer_id=" --algo kmp -m comment --comment "Drop BitTorrent peer_id" -j DROP
+  when: "'Drop BitTorrent peer_id' not in fresh_forward_rules.stdout"
 
-- name: Drop generic BitTorrent TCP handshake signatures
-  command: iptables -C FORWARD -p tcp -m string --string "BitTorrent" --algo kmp -j DROP
-  register: bt_handshake_check
-  failed_when: false
-  changed_when: false
+- name: Insert concurrent connection throttle at position 1
+  command: iptables -I FORWARD 1 -p tcp --syn -m connlimit --connlimit-above {{ max_conn_per_ip }} -m comment --comment "Throttle massive P2P parallel connections" -j DROP
+  when: "'Throttle massive P2P parallel connections' not in fresh_forward_rules.stdout"
 
-- name: Apply Drop generic BitTorrent TCP rule if absent
-  command: iptables -A FORWARD -p tcp -m string --string "BitTorrent" --algo kmp -m comment --comment "Drop BitTorrent TCP handshake signatures" -j DROP
-  when: bt_handshake_check.rc != 0
 
-- name: Drop explicit peer ID connections
-  command: iptables -C FORWARD -p tcp -m string --string "peer_id=" --algo kmp -j DROP
-  register: peer_id_check
-  failed_when: false
-  changed_when: false
-
-- name: Apply Drop explicit peer ID rule if absent
-  command: iptables -A FORWARD -p tcp -m string --string "peer_id=" --algo kmp -m comment --comment "Drop BitTorrent peer_id" -j DROP
-  when: peer_id_check.rc != 0
-
-# Check and apply connlimit rules cleanly without causing module exceptions
-- name: Check if connlimit rule is already configured
-  command: iptables -C FORWARD -p tcp --syn -m connlimit --connlimit-above {{ max_conn_per_ip }} -j DROP
-  register: connlimit_check
-  failed_when: false
-  changed_when: false
-
-- name: Apply concurrent connection throttle per IP if absent
-  command: iptables -A FORWARD -p tcp --syn -m connlimit --connlimit-above {{ max_conn_per_ip }} -m comment --comment "Throttle massive P2P parallel connections" -j DROP
-  when: connlimit_check.rc != 0
+# ==============================================================================
+# 💾 PERSISTENCE: Save rules permanently
+# ==============================================================================
 
 - name: Save iptables rules permanently (Debian/Ubuntu)
   command: netfilter-persistent save
