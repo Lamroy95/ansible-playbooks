@@ -1,0 +1,92 @@
+---
+- name: Ensure iptables-persistent is installed (Debian/Ubuntu)
+  apt:
+    name: iptables-persistent
+    state: present
+    update_cache: yes
+  when: ansible_facts['os_family'] == "Debian"
+
+- name: Ensure iptables-services is installed (RedHat/CentOS)
+  yum:
+    name: iptables-services
+    state: present
+  when: ansible_facts['os_family'] == "RedHat"
+
+- name: Block standard BitTorrent TCP port range (6881-6889)
+  iptables:
+    chain: FORWARD
+    protocol: tcp
+    destination_port: "6881:6889"
+    jump: DROP
+    comment: "Block standard BitTorrent TCP ports"
+
+- name: Block standard BitTorrent UDP port range (6881-6889)
+  iptables:
+    chain: FORWARD
+    protocol: udp
+    destination_port: "6881:6889"
+    jump: DROP
+    comment: "Block standard BitTorrent UDP ports"
+
+- name: Drop DHT protocol strings (UDP handshake)
+  command: iptables -C FORWARD -p udp -m string --string "d1:ad2:id20:" --algo kmp -j DROP
+  register: dht_check
+  failed_when: false
+  changed_when: false
+
+- name: Apply Drop DHT rule if absent
+  command: iptables -A FORWARD -p udp -m string --string "d1:ad2:id20:" --algo kmp -m comment --comment "Drop BitTorrent DHT strings" -j DROP
+  when: dht_check.rc != 0
+
+- name: Drop info_hash tracker queries
+  command: iptables -C FORWARD -p udp -m string --string "info_hash" --algo kmp -j DROP
+  register: info_hash_check
+  failed_when: false
+  changed_when: false
+
+- name: Apply Drop info_hash rule if absent
+  command: iptables -A FORWARD -p udp -m string --string "info_hash" --algo kmp -m comment --comment "Drop BitTorrent info_hash queries" -j DROP
+  when: info_hash_check.rc != 0
+
+- name: Drop generic BitTorrent TCP handshake signatures
+  command: iptables -C FORWARD -p tcp -m string --string "BitTorrent" --algo kmp -j DROP
+  register: bt_handshake_check
+  failed_when: false
+  changed_when: false
+
+- name: Apply Drop generic BitTorrent TCP rule if absent
+  command: iptables -A FORWARD -p tcp -m string --string "BitTorrent" --algo kmp -m comment --comment "Drop BitTorrent TCP handshake signatures" -j DROP
+  when: bt_handshake_check.rc != 0
+
+- name: Drop explicit peer ID connections
+  command: iptables -C FORWARD -p tcp -m string --string "peer_id=" --algo kmp -j DROP
+  register: peer_id_check
+  failed_when: false
+  changed_when: false
+
+- name: Apply Drop explicit peer ID rule if absent
+  command: iptables -A FORWARD -p tcp -m string --string "peer_id=" --algo kmp -m comment --comment "Drop BitTorrent peer_id" -j DROP
+  when: peer_id_check.rc != 0
+
+# Check and apply connlimit rules cleanly without causing module exceptions
+- name: Check if connlimit rule is already configured
+  command: iptables -C FORWARD -p tcp --syn -m connlimit --connlimit-above {{ max_conn_per_ip }} -j DROP
+  register: connlimit_check
+  failed_when: false
+  changed_when: false
+
+- name: Apply concurrent connection throttle per IP if absent
+  command: iptables -A FORWARD -p tcp --syn -m connlimit --connlimit-above {{ max_conn_per_ip }} -m comment --comment "Throttle massive P2P parallel connections" -j DROP
+  when: connlimit_check.rc != 0
+
+- name: Save iptables rules permanently (Debian/Ubuntu)
+  command: netfilter-persistent save
+  changed_when: true
+  when: ansible_facts['os_family'] == "Debian"
+
+- name: Save iptables rules permanently (RedHat/CentOS)
+  service:
+    name: iptables
+    state: restarted
+    enabled: yes
+  when: ansible_facts['os_family'] == "RedHat"

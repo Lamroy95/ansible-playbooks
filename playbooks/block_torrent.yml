@@ -1,0 +1,12 @@
+---
+- name: Deploy Anti-P2P and Torrent Blocking Firewall Rules
+  hosts: vpn
+  become: yes
+  gather_facts: yes
+
+  vars:
+    # Overriding the default threshold (Optional: defaults to 50 if removed)
+    max_conn_per_ip: 50
+
+  roles:
+    - role: block_torrent

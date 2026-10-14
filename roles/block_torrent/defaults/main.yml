@@ -1,0 +1,3 @@
+---
+# Max concurrent TCP connections allowed per user IP (kills high-volume peer connections)
+max_conn_per_ip: 50
